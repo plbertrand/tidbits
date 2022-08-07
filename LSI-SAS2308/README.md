@@ -32,3 +32,8 @@ Flashing that card was not a walk in the park. After the working solution sectio
 4. Run `sasflsh.exe -o -f 2308T207.ROM`
 5. Receive error: `ERROR: Failed to initialize PAL. Exiting Program.`
 
+## Credits
+
+- [bsodmike](https://forum.level1techs.com/t/asus-uefi-friendly-efi-usb-no-luck-flashing-lsi9211-8i-hba-from-ir-to-it/126344/4) [Github](https://github.com/bsodmike/s5clouds8-lsi9211-8i-IR-to-IT-EFI-bootable-usb)
+- [aronchick](https://serverfault.com/a/679176)
+
