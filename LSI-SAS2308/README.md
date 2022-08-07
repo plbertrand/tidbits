@@ -1,4 +1,4 @@
-# Flash LSI SAS2308 from IR (Integrated RAID) to IT (Initiator Target
+# Flash LSI SAS2308 from IR (Integrated RAID) to IT (Initiator Target)
 
 Flashing that card was not a walk in the park. After the working solution section, my attempts are described starting with EFI Shell, followed by FreeDOS then the working solution.
 
@@ -17,3 +17,18 @@ Flashing that card was not a walk in the park. After the working solution sectio
 10. If you are going from IR to IT, you must first erase the firmware: `sas2flash.efi -o -e 6`
 11. **DO NOT REBOOT**
 12. Flash the new firmware and BIOS: `sas2flash.efi -o -f 2308T207.ROM -b mptsas2.rom`
+
+
+## Attempt #1
+
+1. Same as the working solution except use the latest release of Tianocore `Shell.efi`
+2. Receive error: `InitShellApp: Application not started from Shell`
+
+## Attempt #2
+
+1. Format your thumbdrive with `FreeDOS` using Rufus.
+2. Copy the DOS content from `PH20.00.07.00-IT.zip`.
+3. Boot into FreeDOS
+4. Run `sasflsh.exe -o -f 2308T207.ROM`
+5. Receive error: `ERROR: Failed to initialize PAL. Exiting Program.`
+
