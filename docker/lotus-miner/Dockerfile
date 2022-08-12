@@ -7,7 +7,7 @@ ARG DEBIAN_FRONTEND=noninteractive
 
 RUN apt update
 
-RUN apt install -y git curl vim net-tools gpg ca-certificates wget
+RUN apt install -y git curl vim net-tools gpg ca-certificates wget inetutils-*
 
 RUN curl -s 'https://install.zerotier.com' | bash
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | bash -s -- -y
