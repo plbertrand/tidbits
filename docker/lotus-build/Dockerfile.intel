@@ -1,0 +1,24 @@
+FROM plbertrand/lotus-build-deps
+LABEL maintainer="Pierre-Luc Bertrand <bertrand.pierreluc@gmail.com>"
+LABEL version="0.1"
+LABEL description="Docker image to build Lotus"
+
+# branch or tag of the lotus version to build
+ARG BRANCH
+ARG NETWORK
+
+RUN echo "Building lotus from branch $BRANCH in network $NETWORK"
+
+ENV CGO_CFLAGS="-D__BLST_PORTABLE__"
+ENV RUSTFLAGS="-C target-cpu=native -g"
+ENV FFI_BUILD_FROM_SOURCE=1
+
+RUN cd lotus && \
+    git checkout $BRANCH && \
+    git submodule update --init --recursive && \
+    make -j 16 clean && \
+    make -j 16 deps && \
+    make -j 16 $NETWORK lotus lotus-miner && \
+    install -C ./lotus /usr/local/bin/lotus && \
+    install -C ./lotus-miner /usr/local/bin/lotus-miner
+

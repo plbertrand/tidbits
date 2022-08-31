@@ -1,0 +1,27 @@
+FROM docker.io/ubuntu:22.04
+LABEL maintainer="Pierre-Luc Bertrand <bertrand.pierreluc@gmail.com>"
+LABEL version="0.1"
+LABEL description="Docker image to build Lotus"
+
+
+RUN apt-get update -y && \
+    apt search cuda && \
+    apt-get install sudo cron git mesa-opencl-icd gcc bzr jq pkg-config clang libhwloc-dev ocl-icd-opencl-dev build-essential hwloc software-properties-common curl wget -y && \
+    apt-key adv --keyserver keyserver.ubuntu.com --recv-keys FCAE110B1118213C && \
+    add-apt-repository ppa:graphics-drivers/ppa -y && \
+    apt-get update && \
+    apt-get install linux-headers-$(uname -r) nvidia-cuda-toolkit -y && \
+    apt-get clean
+
+
+RUN wget -q https://golang.org/dl/go1.18.1.linux-amd64.tar.gz -O - | sudo tar -xz -C /usr/local
+ENV PATH="/usr/local/go/bin:${PATH}"
+
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+ENV PATH="/root/.cargo/bin:${PATH}"
+
+ENV CGO_CFLAGS="-D__BLST_PORTABLE__"
+ENV RUSTFLAGS="-C target-cpu=native -g"
+ENV FFI_BUILD_FROM_SOURCE=1
+
+RUN git clone https://github.com/filecoin-project/lotus.git
