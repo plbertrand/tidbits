@@ -1,3 +1,3 @@
-$!/bin/bash
-buildah build -t plbertrand/zerotier-timemachine:latest .
+#!/bin/bash
+buildah build --pull -t plbertrand/zerotier-timemachine:latest .
 
