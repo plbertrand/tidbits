@@ -2,6 +2,8 @@ version: '3'
 services:
   timemachine:
     hostname: TimeMachine
+    secrets:
+      - "timemachine-password"
     environment:
       - PASSWORD_FILE=/run/secrets/timemachine-password
       #- PASSWORD=timemachine
@@ -30,6 +32,10 @@ services:
       - NET_ADMIN
     container_name: timemachine
     image: plbertrand/zerotier-timemachine:latest
+
+secrets:
+  timemachine-password:
+    external: true
 
 volumes:
   timemachine-netatalk:
