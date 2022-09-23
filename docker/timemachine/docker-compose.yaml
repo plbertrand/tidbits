@@ -23,6 +23,7 @@ services:
       - timemachine-netatalk:/var/netatalk
       - timemachine-logs:/var/log/supervisor
       - ./zerotier-one:/var/lib/zerotier-one
+      - /var/lib/containers:/var/lib/containers
     ulimits:
       nofile:
         soft: 65536
@@ -36,7 +37,8 @@ services:
 
 secrets:
   timemachine-password:
-    external: true
+    file: ./secret
+      #external: true
 
 volumes:
   timemachine-netatalk:
