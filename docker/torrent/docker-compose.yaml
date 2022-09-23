@@ -1,0 +1,42 @@
+version: '3'
+services:
+  torrent:
+    hostname: torrent
+    environment:
+      - VPN_ENABLED=yes
+      - VPN_USER=p5166472
+      - VPN_PASS=2VhGsnYgkR
+      - VPN_PROV=pia
+      - VPN_CLIENT=openvpn
+      - STRICT_PORT_FORWARD=yes
+      - ENABLE_PRIVOXY=no
+      - LAN_NETWORK=192.168.0.0/16
+      - NAME_SERVERS=84.200.69.80,37.235.1.174,1.1.1.1,37.235.1.177,84.200.70.40,1.0.0.1
+      - VPN_INPUT_PORTS=1234
+      - VPN_OUTPUT_PORTS=5678
+      - DEBUG=false
+      - WEBUI_PORT=8080
+      - UMASK=000
+      - PUID=997
+      - PGID=996
+    restart: unless-stopped
+    volumes:
+      - /zfilecoin/downloads:/data
+      - ./config:/config
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - 1337:8080
+      - 8118:8118
+      - 6881:6881
+      - 6881:6881/udp
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    devices:
+      - "/dev/net/tun:/dev/net/tun"
+    cap_add:
+      - NET_ADMIN
+    container_name: torrent
+    image: docker.io/binhex/arch-qbittorrentvpn
+
