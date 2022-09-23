@@ -3,13 +3,14 @@ services:
   timemachine:
     hostname: TimeMachine
     secrets:
-      - "timemachine-password"
+      - timemachine-password
     environment:
       - PASSWORD_FILE=/run/secrets/timemachine-password
       #- PASSWORD=timemachine
       #- LOG_LEVEL=3
       - CUSTOM_AFP_CONF=false
-      - MIMIC_MODEL=TimeCapsule6,106
+      #- MIMIC_MODEL=TimeCapsule6,106
+      - MIMIC_MODEL=TimeCapsule8,119
       - TM_USERNAME=timemachine
       - TM_GROUPNAME=timemachine
       - TM_UID=1000
