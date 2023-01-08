@@ -5,16 +5,11 @@ LABEL description="Docker image to build Lotus"
 
 
 RUN apt-get update -y && \
-    apt search cuda && \
     apt-get install sudo cron git mesa-opencl-icd gcc bzr jq pkg-config clang libhwloc-dev ocl-icd-opencl-dev build-essential hwloc software-properties-common curl wget -y && \
-    apt-key adv --keyserver keyserver.ubuntu.com --recv-keys FCAE110B1118213C && \
-    add-apt-repository ppa:graphics-drivers/ppa -y && \
-    apt-get update && \
-    apt-get install linux-headers-$(uname -r) nvidia-cuda-toolkit -y && \
     apt-get clean
 
 
-RUN wget -q https://golang.org/dl/go1.18.1.linux-amd64.tar.gz -O - | sudo tar -xz -C /usr/local
+RUN wget -q https://golang.org/dl/go1.19.4.linux-amd64.tar.gz -O - | sudo tar -xz -C /usr/local
 ENV PATH="/usr/local/go/bin:${PATH}"
 
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
