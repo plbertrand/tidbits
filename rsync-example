@@ -1,0 +1,1 @@
+sudo rsync -avz --info=progress2 --partial --checksum --rsync-path="sudo rsync" xxx ubuntu@yyy:/zzz/.
