@@ -36,7 +36,7 @@ services:
 
 secrets:
   timemachine-password:
-    external: true
+    file: timemachine-password.txt
 
 volumes:
   timemachine-netatalk:
