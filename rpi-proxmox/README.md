@@ -57,3 +57,8 @@ wget https://raw.githubusercontent.com/plbertrand/tidbits/refs/heads/main/rpi-pr
 systemctl daemon-reload systemctl enable zt-vmbr.timer
 
 reboot
+
+
+## Notes
+
+pvecm add IP-ADDRESS-CLUSTER -link0 $(ip -f inet addr show vmbr0 | sed -En -e 's/.*inet ([0-9.]+).*/\1/p') -link1 $(ip -f inet addr show vmbr1 | sed -En -e 's/.*inet ([0-9.]+).*/\1/p')
