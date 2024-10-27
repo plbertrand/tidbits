@@ -1,0 +1,9 @@
+###########################################
+[Unit]
+Description=Run script at startup zt-vmbr.sh
+
+[Service]
+Type=oneshot
+ExecStart=/root/zt-vmbr.sh
+TimeoutStartSec=0
+###########################################

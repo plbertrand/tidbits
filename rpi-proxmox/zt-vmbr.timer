@@ -1,0 +1,10 @@
+###########################################
+[Unit]
+Description=Run script add ZT to Brige Proxmox
+
+[Timer]
+OnBootSec=1min
+
+[Install]
+WantedBy=default.target
+###########################################
