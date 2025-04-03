@@ -1,7 +1,10 @@
 version: '3'
 services:
   torrent:
+    image: docker.io/binhex/arch-qbittorrentvpn
     hostname: torrent
+    container_name: torrent
+    restart: unless-stopped
     environment:
       - VPN_ENABLED=yes
       - VPN_USER=p5166472
@@ -15,17 +18,16 @@ services:
       - VPN_INPUT_PORTS=1234
       - VPN_OUTPUT_PORTS=5678
       - DEBUG=false
-      - WEBUI_PORT=8080
+      - WEBUI_PORT=1337
       - UMASK=000
       - PUID=997
       - PGID=996
-    restart: unless-stopped
     volumes:
-      - /zfilecoin/downloads:/data
+      - /dev/shm/temp:/data
       - ./config:/config
       - /etc/localtime:/etc/localtime:ro
     ports:
-      - 1337:8080
+      - 1337:1337
       - 8118:8118
       - 6881:6881
       - 6881:6881/udp
@@ -37,6 +39,4 @@ services:
       - "/dev/net/tun:/dev/net/tun"
     cap_add:
       - NET_ADMIN
-    container_name: torrent
-    image: docker.io/binhex/arch-qbittorrentvpn
 
