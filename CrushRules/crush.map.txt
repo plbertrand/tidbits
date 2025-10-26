@@ -1,0 +1,264 @@
+# begin crush map
+tunable choose_local_tries 0
+tunable choose_local_fallback_tries 0
+tunable choose_total_tries 50
+tunable chooseleaf_descend_once 1
+tunable chooseleaf_vary_r 1
+tunable chooseleaf_stable 1
+tunable straw_calc_version 1
+tunable allowed_bucket_algs 54
+
+# devices
+device 0 osd.0 class hdd
+device 2 osd.2 class ssd
+device 3 osd.3 class hdd
+device 4 osd.4 class hdd
+device 5 osd.5 class hdd
+device 6 osd.6 class ssd
+device 7 osd.7 class ssd
+device 8 osd.8 class ssd
+device 11 osd.11 class hdd
+device 12 osd.12 class hdd
+device 13 osd.13 class hdd
+device 14 osd.14 class hdd
+device 15 osd.15 class ssd
+device 16 osd.16 class hdd
+device 17 osd.17 class hdd
+device 18 osd.18 class hdd
+device 19 osd.19 class hdd
+device 20 osd.20 class hdd
+device 21 osd.21 class hdd
+device 22 osd.22 class hdd
+device 23 osd.23 class hdd
+device 24 osd.24 class hdd
+device 25 osd.25 class hdd
+device 26 osd.26 class hdd
+device 27 osd.27 class hdd
+device 28 osd.28 class hdd
+device 29 osd.29 class hdd
+device 30 osd.30 class hdd
+device 31 osd.31 class hdd
+
+# types
+type 0 osd
+type 1 host
+type 2 chassis
+type 3 rack
+type 4 row
+type 5 pdu
+type 6 pod
+type 7 room
+type 8 datacenter
+type 9 zone
+type 10 region
+type 11 root
+
+# buckets
+host beast {
+	id -7		# do not change unnecessarily
+	id -8 class hdd		# do not change unnecessarily
+	id -14 class ssd		# do not change unnecessarily
+	# weight 65.85953
+	alg straw2
+	hash 0	# rjenkins1
+	item osd.4 weight 2.72899
+	item osd.5 weight 2.72899
+	item osd.11 weight 2.72899
+	item osd.12 weight 2.72899
+	item osd.13 weight 2.72899
+	item osd.14 weight 2.72899
+	item osd.15 weight 2.91089
+	item osd.16 weight 2.72899
+	item osd.17 weight 2.72899
+	item osd.18 weight 2.72899
+	item osd.19 weight 2.72899
+	item osd.20 weight 2.72899
+	item osd.21 weight 2.72899
+	item osd.22 weight 2.72899
+	item osd.23 weight 2.72899
+	item osd.24 weight 2.72899
+	item osd.25 weight 2.72899
+	item osd.26 weight 2.72899
+	item osd.27 weight 2.72899
+	item osd.28 weight 2.72899
+	item osd.29 weight 2.72899
+	item osd.30 weight 2.72899
+	item osd.31 weight 2.72899
+	item osd.2 weight 2.91089
+}
+room sfo-loud {
+	id -39		# do not change unnecessarily
+	id -40 class hdd		# do not change unnecessarily
+	id -42 class ssd		# do not change unnecessarily
+	# weight 65.85953
+	alg straw2
+	hash 0	# rjenkins1
+	item beast weight 65.85953
+}
+host udoo {
+	id -3		# do not change unnecessarily
+	id -4 class hdd		# do not change unnecessarily
+	id -13 class ssd		# do not change unnecessarily
+	# weight 14.55478
+	alg straw2
+	hash 0	# rjenkins1
+	item osd.0 weight 7.27739
+	item osd.3 weight 7.27739
+}
+host rpi-1 {
+	id -17		# do not change unnecessarily
+	id -18 class hdd		# do not change unnecessarily
+	id -20 class ssd		# do not change unnecessarily
+	# weight 0.79999
+	alg straw2
+	hash 0	# rjenkins1
+	item osd.6 weight 0.79999
+}
+host rpi-2 {
+	id -33		# do not change unnecessarily
+	id -34 class hdd		# do not change unnecessarily
+	id -36 class ssd		# do not change unnecessarily
+	# weight 1.09998
+	alg straw2
+	hash 0	# rjenkins1
+	item osd.7 weight 1.09998
+}
+host rpi-4 {
+	id -29		# do not change unnecessarily
+	id -30 class hdd		# do not change unnecessarily
+	id -32 class ssd		# do not change unnecessarily
+	# weight 0.95000
+	alg straw2
+	hash 0	# rjenkins1
+	item osd.8 weight 0.95000
+}
+room sfo-quiet {
+	id -38		# do not change unnecessarily
+	id -43 class hdd		# do not change unnecessarily
+	id -45 class ssd		# do not change unnecessarily
+	# weight 17.40474
+	alg straw2
+	hash 0	# rjenkins1
+	item udoo weight 14.55478
+	item rpi-1 weight 0.79999
+	item rpi-2 weight 1.09998
+	item rpi-4 weight 0.95000
+}
+datacenter sfo {
+	id -37		# do not change unnecessarily
+	id -46 class hdd		# do not change unnecessarily
+	id -48 class ssd		# do not change unnecessarily
+	# weight 83.26427
+	alg straw2
+	hash 0	# rjenkins1
+	item sfo-loud weight 65.85953
+	item sfo-quiet weight 17.40474
+}
+host carre {
+	id -10		# do not change unnecessarily
+	id -11 class hdd		# do not change unnecessarily
+	id -15 class ssd		# do not change unnecessarily
+	# weight 0.00000
+	alg straw2
+	hash 0	# rjenkins1
+}
+room yul-loud {
+	id -21		# do not change unnecessarily
+	id -22 class hdd		# do not change unnecessarily
+	id -28 class ssd		# do not change unnecessarily
+	# weight 0.00000
+	alg straw2
+	hash 0	# rjenkins1
+	item carre weight 0.00000
+}
+datacenter yul {
+	id -24		# do not change unnecessarily
+	id -23 class hdd		# do not change unnecessarily
+	id -26 class ssd		# do not change unnecessarily
+	# weight 0.00000
+	alg straw2
+	hash 0	# rjenkins1
+	item yul-loud weight 0.00000
+}
+root default {
+	id -1		# do not change unnecessarily
+	id -2 class hdd		# do not change unnecessarily
+	id -16 class ssd		# do not change unnecessarily
+	# weight 83.26428
+	alg straw2
+	hash 0	# rjenkins1
+	item sfo weight 83.26428
+	item yul weight 0.00000
+}
+
+# rules
+rule replicated_rule {
+	id 0
+	type replicated
+	step take default
+	step choose firstn 0 type room
+	step chooseleaf firstn 1 type host
+	step emit
+}
+rule sfo_fast_replicated_rule {
+	id 1
+	type replicated
+	step take default class ssd
+	step take sfo class ssd
+	step take sfo-quiet class ssd
+	step chooseleaf firstn 1 type host
+	step emit
+	step take default class ssd
+	step take sfo class ssd
+	step take sfo-loud class ssd
+	step chooseleaf firstn 1 type host
+	step emit
+	step take default class hdd
+	step take sfo class hdd
+	step chooseleaf firstn -2 type host
+	step emit
+}
+rule sfo_slow_replicated_rule {
+	id 2
+	type replicated
+	step take default class hdd
+	step take sfo class hdd
+	step take sfo-quiet class hdd
+	step chooseleaf firstn 1 type osd
+	step emit
+	step take default class hdd
+	step take sfo class hdd
+	step take sfo-loud class hdd
+	step chooseleaf firstn -1 type osd
+	step emit
+}
+rule sfo_quiet_replicated_rule {
+	id 3
+	type replicated
+	step take default class ssd
+	step take sfo class ssd
+	step take sfo-quiet class ssd
+	step chooseleaf firstn 2 type host
+	step emit
+	step take default class hdd
+	step take sfo class hdd
+	step take sfo-quiet class hdd
+	step chooseleaf firstn -2 type host
+	step emit
+}
+rule sfo_beast_only_replicated_rule {
+	id 4
+	type replicated
+	step take default class ssd
+	step take sfo class ssd
+	step take sfo-loud class ssd
+	step chooseleaf firstn 1 type osd
+	step emit
+	step take default class hdd
+	step take sfo class hdd
+	step take sfo-loud class hdd
+	step chooseleaf firstn -1 type osd
+	step emit
+}
+
+# end crush map
