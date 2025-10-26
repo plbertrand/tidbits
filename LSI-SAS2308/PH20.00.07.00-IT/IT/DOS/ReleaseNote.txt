@@ -1,0 +1,45 @@
+SAS2308IT Controller Firmware Release Note
+---------------------------------------------
+Sep., 2016
+Revision 710
+
+
+Firmware Name
+---------------
+2308T207.ROM
+
+
+Firmware Version
+------------------
+20.00.07.00
+
+
+NVDATA Version
+------------------
+14.01.30.16
+
+
+OPROM Version
+------------------
+7.39.02.00
+
+
+Firmware Update History
+-------------------------
+1. Persistent bit off
+2. Fix PCIe link timeout
+3. Fix NCQ I/O error messages
+4. fix SATA drives poor performance issue
+5. Fix In the IOP a false reply parity error is being generated, which results in a 0x1500 fault.
+6. support X11 platform
+
+
+How to Flash Firmware
+-------------------------
+1. Under DOS, run SMC2308T.bat
+
+
+---------------------------------------------------------------
+
+Copyright 2016, Super Micro Computer. Inc, All rights reserved
+
