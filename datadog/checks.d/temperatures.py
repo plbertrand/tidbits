@@ -7,7 +7,23 @@ import subprocess
 try:
     from datadog_checks.base import AgentCheck
 except ImportError:
-    from checks import AgentCheck
+    try:
+        from checks import AgentCheck
+    except ImportError:
+        # Define a dummy AgentCheck for testing purposes if not found
+        class AgentCheck:
+            def gauge(self, metric, value, tags=None):
+                pass
+            def log(self, *args, **kwargs):
+                pass
+            def info(self, *args, **kwargs):
+                pass
+            def debug(self, *args, **kwargs):
+                pass
+            def warning(self, *args, **kwargs):
+                pass
+            def error(self, *args, **kwargs):
+                pass
 
 __version__ = "1.0.0"
 
@@ -67,6 +83,7 @@ def get_drive_temperatures(log):
     processes = {}
     drive_paths = [os.path.join('/dev', device) for device in sorted(os.listdir('/dev')) if re.match(r'^sd[a-z]$', device)]
     log.info(f"Found {len(drive_paths)} drives to check.")
+    log.debug(f"Drive paths: {drive_paths}")
 
     for drive_path in drive_paths:
         device = os.path.basename(drive_path)
@@ -87,22 +104,30 @@ def get_drive_temperatures(log):
 
             # Parse JSON output
             smart_data = json.loads(stdout)
+            log.debug(f"Smart data for {drive_path}: {json.dumps(smart_data, indent=2)}")
             
             # Extract current drive temperature and other relevant temps
-            if 'temperature' in smart_data:
+            drive_temp_values = {}
+            # Try to extract temperature using the new helper function first
+            current_temp = _extract_temperature_from_smart_data(smart_data, log)
+            log.debug(f"Extracted current_temp for {drive_path}: {current_temp}")
+            if current_temp is not None:
+                drive_temp_values['current'] = current_temp
+                # Attempt to get 'crit' from the top-level 'temperature' section if available
+                if 'temperature' in smart_data and 'drive_trip' in smart_data['temperature']:
+                    drive_temp_values['crit'] = smart_data['temperature']['drive_trip']
+            elif 'temperature' in smart_data: # Fallback to original logic if helper didn't find anything
                 temp_data = smart_data['temperature']
-                drive_temp_values = {}
                 if 'current' in temp_data:
                     drive_temp_values['current'] = temp_data['current']
                 if 'drive_trip' in temp_data:
                     drive_temp_values['crit'] = temp_data['drive_trip']
+            log.debug(f"Final drive_temp_values for {drive_path}: {drive_temp_values}")
 
-                if drive_temp_values:
-                    drive_temps[device] = drive_temp_values
-                else:
-                    log.warning(f"No temperature data found in smartctl JSON output for {drive_path}")
+            if drive_temp_values:
+                drive_temps[device] = drive_temp_values
             else:
-                log.warning(f"Temperature section not found in smartctl JSON output for {drive_path}")
+                log.warning(f"No temperature data found in smartctl JSON output for {drive_path}")
         except json.JSONDecodeError as e:
             log.warning(f"Could not decode JSON from smartctl output for {drive_path}: {e}")
         except KeyError as e:
@@ -110,6 +135,26 @@ def get_drive_temperatures(log):
 
     log.info(f"Successfully collected temperatures for {len(drive_temps)} drives.")
     return drive_temps
+
+
+def _extract_temperature_from_smart_data(smart_data, log):
+    """
+    Extracts temperature from smartctl JSON output, trying different known locations.
+    """
+    # Try to extract from ata_smart_attributes.table (e.g., for HDDs/SSDs)
+    if 'ata_smart_attributes' in smart_data and 'table' in smart_data['ata_smart_attributes']:
+        for attr in smart_data['ata_smart_attributes']['table']:
+            if 'name' in attr and attr['name'] == 'Temperature_Celsius' and 'value' in attr:
+                log.debug("Found Temperature_Celsius in ata_smart_attributes.table")
+                return attr['value']
+
+    # Fallback to top-level 'temperature' section (e.g., for NVMe drives)
+    if 'temperature' in smart_data and 'current' in smart_data['temperature']:
+        log.debug("Found current temperature in top-level 'temperature' section")
+        return smart_data['temperature']['current']
+
+    log.debug("No temperature found in known locations within smartctl JSON output.")
+    return None
 
 class TemperaturesCheck(AgentCheck):
     def __init__(self, name, init_config, agentConfig, instances):
@@ -214,3 +259,92 @@ class TemperaturesCheck(AgentCheck):
         for metric_data in reported_metrics:
             self.log.info(f"Metric: {metric_data['metric']}, Value: {metric_data['value']}, Tags: {metric_data['tags']}")
         self.log.info("--- End of Metrics Summary ---")
+
+import unittest
+from unittest.mock import Mock
+
+class TestTemperatureExtraction(unittest.TestCase):
+    def test_extract_temperature_from_smart_data_new_machine(self):
+        mock_smart_data = {
+            "json_format_version": [1, 0],
+            "smartctl": {
+                "version": [7, 3],
+                "svn_revision": "5338",
+                "platform_info": "x86_64-linux-6.8.12-15-pve",
+                "build_info": "(local build)",
+                "argv": ["smartctl", "--json", "-A", "/dev/sda"],
+                "drive_database_version": {"string": "7.3/5319"},
+                "exit_status": 0
+            },
+            "local_time": {
+                "time_t": 1761580032,
+                "asctime": "Mon Oct 27 10:47:12 2025 EST"
+            },
+            "device": {
+                "name": "/dev/sda",
+                "info_name": "/dev/sda [SAT]",
+                "type": "sat",
+                "protocol": "ATA"
+            },
+            "ata_smart_attributes": {
+                "revision": 10,
+                "table": [
+                    {
+                        "id": 1,
+                        "name": "Raw_Read_Error_Rate",
+                        "value": 67,
+                        "worst": 64,
+                        "thresh": 44,
+                        "when_failed": "",
+                        "flags": {"value": 15, "string": "POSR-- ", "prefailure": True, "updated_online": True, "performance": True, "error_rate": True, "event_count": False, "auto_keep": False},
+                        "raw": {"value": 4983200, "string": "4983200"}
+                    },
+                    {
+                        "id": 194,
+                        "name": "Temperature_Celsius",
+                        "value": 36,
+                        "worst": 44,
+                        "thresh": 0,
+                        "when_failed": "",
+                        "flags": {"value": 34, "string": "-O---K ", "prefailure": False, "updated_online": True, "performance": False, "error_rate": False, "event_count": False, "auto_keep": True},
+                        "raw": {"value": 42949672996, "string": "36 (0 10 0 0 0)"}
+                    },
+                    {
+                        "id": 197,
+                        "name": "Current_Pending_Sector",
+                        "value": 100,
+                        "worst": 100,
+                        "thresh": 0,
+                        "when_failed": "",
+                        "flags": {"value": 18, "string": "-O--C- ", "prefailure": False, "updated_online": True, "performance": False, "error_rate": False, "event_count": True, "auto_keep": False},
+                        "raw": {"value": 0, "string": "0"}
+                    }
+                ]
+            },
+            "power_on_time": {"hours": 14500},
+            "power_cycle_count": 98,
+            "temperature": {"current": 35}
+        }
+        mock_log = Mock()
+        
+        # Test extraction from ata_smart_attributes.table
+        extracted_temp = _extract_temperature_from_smart_data(mock_smart_data, mock_log)
+        self.assertEqual(extracted_temp, 36)
+
+        # Test fallback to top-level 'temperature' if ata_smart_attributes.table doesn't have Temperature_Celsius
+        mock_smart_data_no_attr_temp = mock_smart_data.copy()
+        mock_smart_data_no_attr_temp['ata_smart_attributes']['table'] = [
+            attr for attr in mock_smart_data_no_attr_temp['ata_smart_attributes']['table']
+            if attr['name'] != 'Temperature_Celsius'
+        ]
+        extracted_temp_fallback = _extract_temperature_from_smart_data(mock_smart_data_no_attr_temp, mock_log)
+        self.assertEqual(extracted_temp_fallback, 35) # Expecting 35 from top-level 'temperature'
+
+        # Test no temperature found
+        mock_smart_data_no_temp = mock_smart_data_no_attr_temp.copy()
+        del mock_smart_data_no_temp['temperature']
+        extracted_temp_none = _extract_temperature_from_smart_data(mock_smart_data_no_temp, mock_log)
+        self.assertIsNone(extracted_temp_none)
+
+if __name__ == '__main__':
+    unittest.main()
