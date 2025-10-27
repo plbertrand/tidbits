@@ -1,0 +1,3 @@
+## allow datadog daemons (which run as user dd-agent) to collect device health metrics
+
+dd-agent ALL=NOPASSWD: /usr/sbin/smartctl
