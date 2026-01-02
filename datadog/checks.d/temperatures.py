@@ -48,7 +48,7 @@ def parse_sensors(data):
             if not line:
                 continue
 
-            temp_match = re.search(r'(.+?):\s*\+?(-?\d+\.\d+) C', line)
+            temp_match = re.search(r'(.+?):\s*\+?(-?\d+\.\d+)\s?°?C', line)
             if temp_match:
                 log.debug("Temp match found: %s", temp_match.groups())
                 component = temp_match.group(1).strip()
@@ -193,10 +193,12 @@ class TemperaturesCheck(AgentCheck):
 
         self.log.info("Starting temperatures check.") # Added for guaranteed visibility
 
+        self.log.info("About to run 'sensors' command.")
         try:
-            sensors_output = subprocess.check_output(["sensors"], universal_newlines=True)
+            sensors_output = subprocess.check_output(["/usr/bin/sensors"], universal_newlines=True)
+            self.log.info("Successfully ran 'sensors' command. Output: %s", sensors_output)
         except (OSError, subprocess.CalledProcessError) as e:
-            self.log.error("Unable to run 'sensors' command: %s", e)
+            self.log.error("Unable to run 'sensors' command: %s", e, exc_info=True)
             # Do not return here, as we might still be able to read thermal zones
         else:
             self.log.info("Successfully ran 'sensors' command.")
@@ -205,6 +207,8 @@ class TemperaturesCheck(AgentCheck):
 
             for sensor_name, sensor_data_list in parsed_sensors.items():
                 self.log.info("Processing sensor: %s", sensor_name)
+                if 'k10temp-pci' in sensor_name:
+                    self.log.info("Processing k10temp-pci sensor for CPU temperature.")
                 for sensor_data in sensor_data_list:
                     tags = [f"sensor:{sensor_name}", f"component:{sensor_data['component']}"]
                     if 'temp' in sensor_data:
@@ -238,6 +242,18 @@ class TemperaturesCheck(AgentCheck):
                         if 'crit' in sensor_data:
                             self.gauge("custom.temperature.nvme.crit", sensor_data['crit'], tags=nvme_tags)
                             reported_metrics.append({"metric": "custom.temperature.nvme.crit", "value": sensor_data['crit'], "tags": nvme_tags})
+
+                    # If it's a CPU, also report the special metrics
+                    self.log.info("Checking for CPU sensor: %s", sensor_name)
+                    if "k10temp-pci" in sensor_name:
+                        self.log.info("k10temp-pci sensor detected: %s", sensor_name)
+                        # Only report Tctl metrics for CPU
+                        if sensor_data['component'] == 'Tctl':
+                            cpu_tags = [f"cpu:{sensor_name}-{sensor_data['component']}"]
+                            self.log.info("CPU tags: %s", cpu_tags)
+                            if 'temp' in sensor_data:
+                                self.gauge("custom.temperature.cpu", sensor_data['temp'], tags=cpu_tags)
+                                reported_metrics.append({"metric": "custom.temperature.cpu", "value": sensor_data['temp'], "tags": cpu_tags})
 
         # Collect CPU temperatures from thermal zones
         all_thermal_zones = self._read_all_thermal_zones()
@@ -345,6 +361,83 @@ class TestTemperatureExtraction(unittest.TestCase):
         del mock_smart_data_no_temp['temperature']
         extracted_temp_none = _extract_temperature_from_smart_data(mock_smart_data_no_temp, mock_log)
         self.assertIsNone(extracted_temp_none)
+
+    def test_parse_sensors_with_k10temp(self):
+        sensors_output = '''
+k10temp-pci-00f3
+Adapter: PCI adapter
+Tctl:         +44.5°C  
+
+k10temp-pci-00e3
+Adapter: PCI adapter
+Tctl:         +45.0°C  
+Tccd1:        +43.8°C  
+Tccd2:        +44.5°C  
+Tccd3:        +44.0°C  
+
+k10temp-pci-00d3
+Adapter: PCI adapter
+Tctl:         +50.2°C  
+
+k10temp-pci-00c3
+Adapter: PCI adapter
+Tctl:         +50.5°C  
+Tccd1:        +50.0°C  
+Tccd2:        +50.2°C  
+Tccd3:        +53.0°C  
+
+nvme-pci-4200
+Adapter: PCI adapter
+Composite:    +30.9°C  (low  = -273.1°C, high = +79.8°C)
+                       (crit = +82.8°C)
+Sensor 1:     +30.9°C  (low  = -273.1°C, high = +65261.8°C)
+Sensor 2:     +37.9°C  (low  = -273.1°C, high = +65261.8°C)
+
+k10temp-pci-00fb
+Adapter: PCI adapter
+Tctl:         +43.5°C  
+
+k10temp-pci-00eb
+Adapter: PCI adapter
+Tctl:         +43.2°C  
+
+k10temp-pci-00db
+Adapter: PCI adapter
+Tctl:         +50.0°C  
+
+k10temp-pci-00cb
+Adapter: PCI adapter
+Tctl:         +49.2°C  
+
+nvme-pci-4100
+Adapter: PCI adapter
+Composite:    +40.9°C  (low  = -273.1°C, high = +79.8°C)
+                       (crit = +82.8°C)
+Sensor 1:     +40.9°C  (low  = -273.1°C, high = +65261.8°C)
+Sensor 2:     +48.9°C  (low  = -273.1°C, high = +65261.8°C)
+'''
+        
+        parsed_sensors = parse_sensors(sensors_output)
+        
+        self.assertIn('k10temp-pci-00f3', parsed_sensors)
+        self.assertEqual(len(parsed_sensors['k10temp-pci-00f3']), 1)
+        self.assertEqual(parsed_sensors['k10temp-pci-00f3'][0]['component'], 'Tctl')
+        self.assertEqual(parsed_sensors['k10temp-pci-00f3'][0]['temp'], 44.5)
+        
+        self.assertIn('k10temp-pci-00e3', parsed_sensors)
+        self.assertEqual(len(parsed_sensors['k10temp-pci-00e3']), 4)
+        self.assertEqual(parsed_sensors['k10temp-pci-00e3'][0]['component'], 'Tctl')
+        self.assertEqual(parsed_sensors['k10temp-pci-00e3'][0]['temp'], 45.0)
+        self.assertEqual(parsed_sensors['k10temp-pci-00e3'][1]['component'], 'Tccd1')
+        self.assertEqual(parsed_sensors['k10temp-pci-00e3'][1]['temp'], 43.8)
+        
+        self.assertIn('nvme-pci-4200', parsed_sensors)
+        self.assertEqual(len(parsed_sensors['nvme-pci-4200']), 3)
+        self.assertEqual(parsed_sensors['nvme-pci-4200'][0]['component'], 'Composite')
+        self.assertEqual(parsed_sensors['nvme-pci-4200'][0]['temp'], 30.9)
+        self.assertEqual(parsed_sensors['nvme-pci-4200'][0]['low'], -273.1)
+        self.assertEqual(parsed_sensors['nvme-pci-4200'][0]['high'], 79.8)
+        self.assertEqual(parsed_sensors['nvme-pci-4200'][0]['crit'], 82.8)
 
 if __name__ == '__main__':
     unittest.main()
