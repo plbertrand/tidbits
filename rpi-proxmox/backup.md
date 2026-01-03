@@ -1,3 +1,23 @@
+# Backup disk image
+
+```
+proxmox-backup-client backup root.img:/dev/mmcblk0 --repository 192.168.1.74:Proxmox-Backup
+```
+
+# Backup files
+
+```
+proxmox-backup-client backup root.pxar:/ \
+ --include-dev /boot/firmware \
+ --include-dev /etc/pve \
+ --exclude '/var/log/pve*' \
+ --exclude '/var/log/ceph*' \
+ --exclude '/var/log/corosync*' \
+ --repository 192.168.1.74:Proxmox-Backup \
+ --ns fs \
+ --change-detection-mode=metadata
+```
+
 # Restore disk image
 
 ```
